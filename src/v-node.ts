@@ -1,9 +1,11 @@
-type Props = Record<string, any>;
+export type Props = Record<string, any>;
 
-interface IVNode {
+type VNodeChild = IVNode | string | number;
+
+export interface IVNode {
   tag: string;
   props: Props;
-  children: Array<IVNode | string>;
+  children: Array<VNodeChild>;
   update: (newVNode: IVNode) => void;
   render: () => HTMLElement;
 }
@@ -11,15 +13,31 @@ interface IVNode {
 export class VNode implements IVNode {
   tag: string;
   props: Props;
-  children: Array<IVNode | string>;
+  children: Array<VNodeChild>;
+  eventListeners: Record<string, EventListener> = {};
 
-  constructor(tag: string, props: Props, children: Array<IVNode | string>) {
+  constructor(tag: string, props: Props, children: Array<VNodeChild>) {
     this.tag = tag;
     this.props = props;
+    this.setEventlistener(props);
     this.children = children;
   }
 
-  update(newVNode: IVNode) {
+  setEventlistener(props: Props) {
+    Object.keys(props).forEach((key) => {
+      if (key.startsWith("on")) {
+        const eventName = key.slice(2).toLowerCase();
+        this.eventListeners[eventName] = props[key];
+      }
+    });
+  }
+
+  update(newVNode: VNodeChild) {
+    if (typeof newVNode === "string" || typeof newVNode === "number") {
+      this.children = [newVNode];
+      return;
+    }
+
     if (this.tag !== newVNode.tag) {
       throw new Error("Cannot update different tag VNode");
     }
@@ -63,6 +81,9 @@ export class VNode implements IVNode {
         }
       }
     }
+
+    // update event listeners
+    this.setEventlistener(this.props);
   }
 
   render(): HTMLElement {
@@ -70,9 +91,12 @@ export class VNode implements IVNode {
     Object.keys(this.props).forEach((key) => {
       element.setAttribute(key, this.props[key]);
     });
+    Object.keys(this.eventListeners).forEach((key) => {
+      element.addEventListener(key, this.eventListeners[key]);
+    });
     this.children.forEach((child) => {
-      if (typeof child === "string") {
-        element.appendChild(document.createTextNode(child));
+      if (typeof child === "string" || typeof child === "number") {
+        element.appendChild(document.createTextNode(child.toString()));
       } else {
         element.appendChild(child.render());
       }
