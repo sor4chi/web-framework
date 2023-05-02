@@ -15,6 +15,7 @@ export class VNode implements IVNode {
   props: Props;
   children: Array<VNodeChild>;
   eventListeners: Record<string, EventListener> = {};
+  el?: HTMLElement;
 
   constructor(tag: string, props: Props, children: Array<VNodeChild>) {
     this.tag = tag;
@@ -33,13 +34,14 @@ export class VNode implements IVNode {
   }
 
   update(newVNode: VNodeChild) {
+    let updateSelf = false;
     if (typeof newVNode === "string" || typeof newVNode === "number") {
       this.children = [newVNode];
       return;
     }
 
-    if (this.tag !== newVNode.tag) {
-      throw new Error("Cannot update different tag VNode");
+    if (!this.sameVNode(newVNode)) {
+      updateSelf = true;
     }
 
     // update props
@@ -82,13 +84,25 @@ export class VNode implements IVNode {
       }
     }
 
+    if (!updateSelf) {
+      return;
+    }
+
     // update event listeners
     this.setEventlistener(this.props);
+
+    // update element
+    if (this.el) {
+      this.el.replaceWith(this.render());
+    }
   }
 
   render(): HTMLElement {
     const element = document.createElement(this.tag);
     Object.keys(this.props).forEach((key) => {
+      if (key === "value") {
+        return;
+      }
       element.setAttribute(key, this.props[key]);
     });
     Object.keys(this.eventListeners).forEach((key) => {
@@ -101,6 +115,46 @@ export class VNode implements IVNode {
         element.appendChild(child.render());
       }
     });
+    this.el = element;
     return element;
+  }
+
+  sameTag(vNodeChild: VNodeChild) {
+    if (typeof vNodeChild === "string" || typeof vNodeChild === "number") {
+      return false;
+    }
+    if (vNodeChild instanceof VNode) {
+      return this.tag === vNodeChild.tag;
+    }
+    return false;
+  }
+
+  sameProps(vNodeChild: VNodeChild) {
+    if (typeof vNodeChild === "string" || typeof vNodeChild === "number") {
+      return false;
+    }
+    if (vNodeChild instanceof VNode) {
+      const oldProps = this.props;
+      const newProps = vNodeChild.props;
+      return Object.keys(oldProps).every((key) => {
+        if (key === "value") {
+          return true;
+        }
+        if (key.startsWith("on")) {
+          return true;
+        }
+        return oldProps[key] === newProps[key];
+      });
+    }
+    return false;
+  }
+
+  sameVNode(vNodeChild: VNodeChild) {
+    const isSameTag = this.sameTag(vNodeChild);
+    const isSameProps = this.sameProps(vNodeChild);
+    console.log(
+      `tag: ${this.tag}, isSameTag: ${isSameTag}, isSameProps: ${isSameProps}`
+    );
+    return isSameTag && isSameProps;
   }
 }

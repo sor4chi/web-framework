@@ -1,5 +1,6 @@
 import { VNode } from "./v-node";
 import { Component } from "./component";
+import "./rerendering.css";
 
 // const node = new VNode("div", { class: "container" }, [
 //   new VNode("h1", {}, ["Hello, My Virtual DOM!"]),
@@ -14,46 +15,102 @@ import { Component } from "./component";
 
 // document.body.appendChild(node.render());
 
-const component = new Component({
+// const Counter = new Component({
+//   props: {},
+//   state: {
+//     count: 1,
+//   },
+//   render: (state, _, setState) => {
+//     return new VNode("div", {}, [
+//       new VNode("span", {}, [state.count]),
+//       new VNode(
+//         "button",
+//         { onclick: () => setState({ count: state.count + 1 }) },
+//         ["+"]
+//       ),
+//       new VNode(
+//         "button",
+//         { onclick: () => setState({ count: state.count - 1 }) },
+//         ["-"]
+//       ),
+//     ]);
+//   },
+// });
+
+// Counter.mount(document.body);
+
+const Todo = new Component({
   props: {},
   state: {
-    count: 1,
+    todos: ["item 1", "item 2", "item 3"],
+    inputValue: "",
   },
   render: (state, _, setState) => {
     return new VNode("div", {}, [
-      new VNode("span", {}, [state.count]),
       new VNode(
-        "button",
-        { onclick: () => setState({ count: state.count + 1 }) },
-        ["+"]
+        "input",
+        {
+          type: "text",
+          value: state.inputValue,
+          oninput: (e: Event) => {
+            const target = e.target as HTMLInputElement;
+            setState({ inputValue: target.value });
+          },
+        },
+        []
       ),
       new VNode(
         "button",
-        { onclick: () => setState({ count: state.count - 1 }) },
-        ["-"]
+        {
+          onclick: () => {
+            setState({
+              todos: [...state.todos, state.inputValue],
+              inputValue: "",
+            });
+          },
+        },
+        ["Add"]
+      ),
+      new VNode(
+        "ul",
+        {},
+        state.todos.map((todo) => new VNode("li", {}, [todo]))
       ),
     ]);
   },
 });
 
-// const component = new Component({
+Todo.mount(document.body);
+
+// const Calculator = new Component({
 //   props: {},
 //   state: {
-//     todos: ["item 1", "item 2", "item 3"],
-//     inputValue: "",
+//     a: 0,
+//     b: 0,
+//     result: 0,
 //   },
 //   render: (state, _, setState) => {
 //     return new VNode("div", {}, [
 //       new VNode(
 //         "input",
 //         {
-//           type: "text",
-//           value: state.inputValue,
+//           type: "number",
+//           value: state.a,
 //           oninput: (e: Event) => {
-//             setTimeout(() => {
-//               const target = e.target as HTMLInputElement;
-//               setState({ inputValue: target.value });
-//             }, 0);
+//             const target = e.target as HTMLInputElement;
+//             setState({ a: Number(target.value) });
+//           },
+//         },
+//         []
+//       ),
+//       new VNode(
+//         "input",
+//         {
+//           type: "number",
+//           value: state.b,
+//           oninput: (e: Event) => {
+//             const target = e.target as HTMLInputElement;
+//             setState({ b: Number(target.value) });
 //           },
 //         },
 //         []
@@ -61,22 +118,15 @@ const component = new Component({
 //       new VNode(
 //         "button",
 //         {
-//           onclick: () => {
-//             setState({
-//               todos: [...state.todos, state.inputValue],
-//               inputValue: "",
-//             });
-//           },
+//           onclick: () => setState({ result: state.a + state.b }),
 //         },
 //         ["Add"]
 //       ),
-//       new VNode(
-//         "ul",
-//         {},
-//         state.todos.map((todo) => new VNode("li", {}, [todo]))
-//       ),
+//       new VNode("span", {}, [state.result]),
 //     ]);
 //   },
 // });
 
-component.mount(document.body);
+// Calculator.mount(document.body);
+
+document.body.appendChild(document.createElement("input"));

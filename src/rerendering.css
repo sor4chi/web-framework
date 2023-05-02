@@ -1,0 +1,17 @@
+* {
+  animation: rerendering 0.2s ease-in-out;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+  outline-width: 1px;
+  outline-style: solid;
+  outline-offset: 1px;
+}
+
+@keyframes rerendering {
+  0% {
+    outline-color: red;
+  }
+  100% {
+    outline-color: transparent;
+  }
+}

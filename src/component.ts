@@ -11,7 +11,6 @@ export class Component<S extends State = {}, P extends Props = {}> {
     props: P,
     setState: (newState: Partial<S>) => void
   ) => IVNode;
-  el?: HTMLElement;
 
   constructor({
     state,
@@ -48,17 +47,11 @@ export class Component<S extends State = {}, P extends Props = {}> {
       this.setState.bind(this)
     );
     this._vNode.update(newVNode);
-    const element = this._vNode.render();
-    if (this.el) {
-      this.el.replaceWith(element);
-    }
-    this.el = element;
   }
 
   mount(target: HTMLElement) {
     const element = this._vNode.render();
     target.appendChild(element);
-    this.el = element;
   }
 
   unmount(target: HTMLElement) {
